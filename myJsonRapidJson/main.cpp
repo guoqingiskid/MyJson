@@ -1,5 +1,7 @@
 #include "meta.h"
+#include "pow10.h"
 #include <stdio.h>
+#include <stdint.h>
 template<typename B, typename D> struct IsBaseOfImpl {
 	typedef char(&Yes)[1];
 	typedef char(&No)[2];
@@ -25,10 +27,11 @@ class Dir : public Base
 	
 };
 
+#define RAPIDJSON_ALIGN(x) (((x) + static_cast<size_t>(7u)) & ~static_cast<size_t>(7u))
 int main()
 {
-	bool test1 = IsBaseOfImpl<Base, Dir>::Value;
-	bool test2 = IsBaseOfImpl<int, Dir>::Value;
-	fprintf(stdout, "test1: %d\ttest2 : %d\n", test1, test2);
+	uint32_t t = ~7u;
+	int q = static_cast<size_t>(30u) & ~static_cast<size_t>(15u);
+	int s = RAPIDJSON_ALIGN(10);
 	return 0;
 }

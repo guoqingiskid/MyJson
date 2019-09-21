@@ -9,7 +9,7 @@ namespace my_json
 	//分析：第一种情况下，没有继承关系，那么host里面，本身第一个匹配程度更高，但是相对于模板函数与普通函数之间的匹配时，可以直接忽略掉。因此最终匹配到的是普通函数
 	//第二种情况，具有继承关系时，由于隐式转换的原因，因此最终选择类型更接近的模板函数。
 	template<typename B, typename D>
-	struct IsBaseOf
+	struct IsBaseOfImpl
 	{
 		/*static_assert(sizeof(B) != 0);
 		static_assert(sizeof(D) != 0);*/
@@ -30,21 +30,24 @@ namespace my_json
 			operator const D*();					/* operator const B*() */
 		};
 
-		enum { Value = sizeof(check(host{}, 0)) == sizeof(Yes); };
+		enum { Value = sizeof(check(host{}, 0)) == sizeof(Yes) };
 	};
 
 	template<typename T>
-	struct Void { typedef void type; };
+	struct Void { typedef void Type; };
 
 	template<bool Var>
 	struct BoolType
 	{
 		static const bool Value = Var;
-		typedef BoolType type;
+		typedef BoolType Type;
 	};
 
 	typedef BoolType<true>  TrueType;
 	typedef BoolType<false> FalseType;
+
+	template<typename B, typename D>
+	struct IsBaseOf : public BoolType<IsBaseOfImpl<B, D>::Value> {};
 
 	template<bool C>
 	struct SelectIfImpl
@@ -52,7 +55,7 @@ namespace my_json
 		template<typename T1, typename T2>
 		struct Apply
 		{
-			typedef T1 type;
+			typedef T1 Type;
 		};
 	};
 	template<>
@@ -61,51 +64,70 @@ namespace my_json
 		template<typename T1, typename T2>
 		struct Apply
 		{
-			typedef T2 type;
+			typedef T2 Type;
 		};
 	};
 
 	template<bool C, typename T1, typename T2>
-	struct SelectConditon : public SelectIfImpl<C>::Apply<T1, T2>
-	{
-
-	};
+	struct SelectConditon : public SelectIfImpl<C>::Apply<T1, T2>{};
 
 	template<typename C, typename T1, typename T2>
-	struct SelectIf : public SelectConditon<C::Value, T1, T2>
-	{
+	struct SelectIf : public SelectConditon<C::Value, T1, T2> {};
 
-	};
 
 	//表达式
 	template<bool C1, bool C2>
-	struct AddExprCond :public FalseType
-	{
-
-	};
+	struct AddExprCond :public FalseType {};
 
 	template<>
-	struct AddExprCond<true, true> : public TrueType
-	{
-
-	};
+	struct AddExprCond<true, true> : public TrueType {};
 
 	template<bool C1, bool C2>
-	struct OrExprCond : public TrueType
-	{
-
-	};
+	struct OrExprCond : public TrueType {};
 
 	template<>
-	struct OrExprCond<false, false> : public FalseType
-	{
+	struct OrExprCond<false, false> : public FalseType {};
 
-	};
+	template<typename C1, typename C2>
+	struct AndExpr : public AddExprCond<C1::Value, C2::Value> {};
 
+	template<typename C1, typename C2>
+	struct OrExpr : public OrExprCond<C1::Value, C2::Value> {};
 
+	//AddConst、RemoveConst
+	template<typename T>
+	struct AddConst { typedef const T Type; };
+	template<typename T>
+	struct AddConst<const T> { typedef const T Type; };
+
+	template<typename T>
+	struct RemoveConst { typedef T type; };
+	template<typename T>
+	struct RemoveConst<const T> { typedef T Type; };
+
+	//isPointer
+	template<typename T>
+	struct IsPointer : public FalseType {};
+	template<typename T>
+	struct IsPointer<T*> : public TrueType {};
+
+	//EnableIf DisableIf
+	template<bool Condition, typename T = void>
+	struct EnableIfCond { typedef T Type; };
+	template<typename T>
+	struct EnableIfCond<false, T>{};
+
+	template <bool Condition, typename T = void> 
+	struct DisableIfCond { typedef T Type; };
+	template <typename T> 
+	struct DisableIfCond<true, T> { };
+
+	template<typename C, typename T>
+	struct EnableIf : public EnableIfCond<C::Value, T> {};
+
+	template<typename C, typename T>
+	struct DisableIf : public DisableIfCond<C::Value, T> {};
+
+	
 }
-
-
-
-
 #endif

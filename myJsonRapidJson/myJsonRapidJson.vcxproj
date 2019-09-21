@@ -142,7 +142,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="allocator.h" />
     <ClInclude Include="meta.h" />
+    <ClInclude Include="pow10.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
